@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Chi tiết Blog</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 2rem;
+      }
+      .meta {
+        color: #555;
+        font-size: 0.9rem;
+      }
+      .back {
+        display: inline-block;
+        margin-bottom: 1rem;
+        color: #0066cc;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="index.html" class="back">Quay lại danh sách</a>
+    <div id="detail">12345</div>
+
+    <script>
+      const slug = new URLSearchParams(location.search).get("slug");
+      if (!slug) {
+        document.getElementById("detail").innerHTML =
+          "<p>Không tìm thấy bài viết.</p>";
+        return;
+      }
+
+      fetch(`/api/blogs/${slug}`)
+        .then((r) => (r.ok ? r.json() : Promise.reject()))
+        .then((blog) => {
+          document.getElementById("detail").innerHTML = `
+          <h1>${blog.title}</h1>
+          <p class="meta">${blog.author} - ${blog.date}</p>
+          <p>${blog.content}</p>
+        `;
+        })
+        .catch(() => {
+          document.getElementById("detail").innerHTML =
+            "<p>Bài viết không tồn tại.</p>";
+        });
+    </script>
+  </body>
+</html>
