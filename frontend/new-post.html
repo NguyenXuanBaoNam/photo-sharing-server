@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tạo Bài Viết Mới</title>
+    <script src="config.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 2rem;
+        max-width: 700px;
+      }
+      h1 {
+        margin-bottom: 1rem;
+      }
+      .form-group {
+        margin-bottom: 1rem;
+      }
+      label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+      }
+      input,
+      textarea {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      textarea {
+        height: 150px;
+        resize: vertical;
+      }
+      button {
+        padding: 0.75rem 1.5rem;
+        background: #0066cc;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #0055aa;
+      }
+      .message {
+        margin-top: 1rem;
+        color: green;
+      }
+      .error {
+        color: red;
+      }
+      .back {
+        margin-top: 1rem;
+      }
+      a {
+        color: #0066cc;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Tạo Bài Viết Mới</h1>
+    <form id="new-post-form">
+      <div class="form-group">
+        <label for="slug">Slug</label>
+        <input type="text" id="slug" required />
+      </div>
+      <div class="form-group">
+        <label for="title">Tiêu đề</label>
+        <input type="text" id="title" required />
+      </div>
+      <div class="form-group">
+        <label for="description">Mô tả</label>
+        <textarea id="description" required></textarea>
+      </div>
+      <button type="submit">Tạo bài viết</button>
+    </form>
+    <div id="message"></div>
+    <div class="back"><a href="index.html">← Quay lại danh sách</a></div>
+
+    <script>
+      // Kiểm tra authentication
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Bạn cần đăng nhập để tạo bài viết!");
+        window.location.href = "login.html";
+      }
+
+      const form = document.getElementById("new-post-form");
+      const messageEl = document.getElementById("message");
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const slug = document.getElementById("slug").value;
+        const title = document.getElementById("title").value;
+        const description = document.getElementById("description").value;
+
+        const currentToken = localStorage.getItem("token");
+        if (!currentToken) {
+          messageEl.textContent = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!";
+          messageEl.className = "error";
+          setTimeout(() => {
+            window.location.href = "login.html";
+          }, 2000);
+          return;
+        }
+
+        try {
+          const res = await fetch(`${API_URL}/api/post`, {
+            method: "POST",
+            headers: {
+              "Accept": "application/json",
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${currentToken}`,
+            },
+            body: JSON.stringify({ slug, title, description }),
+          });
+
+          const data = await res.json();
+
+          if (res.ok) {
+            messageEl.textContent = data.message || "Post created successfully!";
+            messageEl.className = "message";
+            setTimeout(() => {
+              window.location.href = "index.html";
+            }, 1000);
+          } else {
+            if (res.status === 401 || res.status === 403) {
+              messageEl.textContent = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!";
+              messageEl.className = "error";
+              localStorage.removeItem("token");
+              localStorage.removeItem("user");
+              setTimeout(() => {
+                window.location.href = "login.html";
+              }, 2000);
+            } else {
+              throw new Error(data.error || "Lỗi không xác định");
+            }
+          }
+        } catch (err) {
+          console.error("Error creating data:", err);
+          messageEl.textContent = err.message || "Post created failed!";
+          messageEl.className = "error";
+        }
+      });
+    </script>
+  </body>
+</html>
+

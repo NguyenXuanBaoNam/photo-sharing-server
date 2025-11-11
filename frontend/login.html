@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đăng nhập</title>
+    <script src="config.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background-color: #f5f5f5;
+      }
+      .login-container {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 400px;
+      }
+      h1 {
+        margin-bottom: 1.5rem;
+        text-align: center;
+        color: #333;
+      }
+      .form-group {
+        margin-bottom: 1rem;
+      }
+      label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        color: #555;
+      }
+      input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        font-size: 1rem;
+      }
+      button {
+        width: 100%;
+        padding: 0.75rem;
+        background: #0066cc;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+        margin-top: 1rem;
+      }
+      button:hover {
+        background: #0055aa;
+      }
+      .message {
+        margin-top: 1rem;
+        padding: 0.75rem;
+        border-radius: 4px;
+        text-align: center;
+      }
+      .success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      .back-link {
+        text-align: center;
+        margin-top: 1rem;
+      }
+      .back-link a {
+        color: #0066cc;
+        text-decoration: none;
+      }
+      .back-link a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <h1>Đăng nhập</h1>
+      <form id="login-form">
+        <div class="form-group">
+          <label for="username">Tên đăng nhập</label>
+          <input type="text" id="username" required />
+        </div>
+        <div class="form-group">
+          <label for="password">Mật khẩu</label>
+          <input type="password" id="password" required />
+        </div>
+        <button type="submit">Đăng nhập</button>
+      </form>
+      <div id="message"></div>
+      <div class="back-link">
+        <a href="index.html">← Quay lại trang chủ</a>
+      </div>
+    </div>
+
+    <script>
+      const form = document.getElementById("login-form");
+      const messageEl = document.getElementById("message");
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        try {
+          const res = await fetch(`${API_URL}/api/login`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ username, password }),
+          });
+
+          const data = await res.json();
+
+          if (res.ok) {
+            // Lưu token vào localStorage
+            localStorage.setItem("token", data.token);
+            localStorage.setItem("user", JSON.stringify(data.user));
+
+            messageEl.textContent = "Đăng nhập thành công! Đang chuyển hướng...";
+            messageEl.className = "message success";
+
+            setTimeout(() => {
+              window.location.href = "index.html";
+            }, 1000);
+          } else {
+            messageEl.textContent = data.error || "Đăng nhập thất bại!";
+            messageEl.className = "message error";
+          }
+        } catch (err) {
+          console.error("Login error:", err);
+          messageEl.textContent = "Lỗi kết nối. Vui lòng thử lại!";
+          messageEl.className = "message error";
+        }
+      });
+
+      // Kiểm tra nếu đã đăng nhập
+      const token = localStorage.getItem("token");
+      if (token) {
+        messageEl.textContent = "Bạn đã đăng nhập. Đang chuyển hướng...";
+        messageEl.className = "message success";
+        setTimeout(() => {
+          window.location.href = "index.html";
+        }, 1000);
+      }
+    </script>
+  </body>
+</html>
+
